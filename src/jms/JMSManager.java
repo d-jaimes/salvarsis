@@ -1,8 +1,6 @@
 package jms;
 
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
-import exceptions.IncompleteReplyException;
-import exceptions.NonReplyException;
 import protocolos.Protocolo;
 
 import javax.jms.*;
@@ -304,11 +302,11 @@ public abstract class JMSManager<T> implements MessageListener, ExceptionListene
 	 * Gets the response of the Request
 	 *
 	 * @return List - List with the response to the request given by the servers
-	 * @throws IncompleteReplyException - Caso de IncompleteReplyException
-	 * @throws NonReplyException        - Caso de NonReplyException
+	 * @throws jms.IncompleteReplyException - Caso de IncompleteReplyException
+	 * @throws jms.NonReplyException        - Caso de NonReplyException
 	 * @throws JMSException             - Caso de JMSException
 	 */
-	public List<T> getResponse( ) throws IncompleteReplyException, JMSException, NamingException, InterruptedException, NonReplyException
+	public List<T> getResponse( ) throws jms.IncompleteReplyException, JMSException, NamingException, InterruptedException, jms.NonReplyException
 	{
 		sendMessage( );                           // manda el mensaje de solicitud del requerimiento al topic
 		waiting = true;                           // Lo hace para indicar que si esta esperando respuestas
@@ -330,19 +328,19 @@ public abstract class JMSManager<T> implements MessageListener, ExceptionListene
 				waiting = false;
 				this.numberApps = 0;
 				// Exception que indica que se cumplido el time out y nadie respondido
-				throw new NonReplyException( "Time Out - No Reply" );
+				throw new jms.NonReplyException( "Time Out - No Reply" );
 			}
 			waiting = false;
 			this.numberApps = 0;
 			// Exception que indica que se cumplido el time out pero algunos respondieron
-			throw new IncompleteReplyException( "Time out ", respuesta );
+			throw new jms.IncompleteReplyException( "Time out ", respuesta );
 		}
 		waiting = false;
 		this.numberApps = 0;
 		if( respuesta.isEmpty( ) )
 		{
 			// Exception que indica que todos respondieron pero no llegaron videos
-			throw new NonReplyException( "Got all responses but no data were detected" );
+			throw new jms.NonReplyException( "Got all responses but no data were detected" );
 		}
 		List<T> res = this.respuesta;
 		respuesta.clear( );

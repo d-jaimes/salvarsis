@@ -49,21 +49,6 @@ public class FuncionesCM extends TransactionManager
         return list;
     }
 
-    public ArrayList<FuncionVos> darFunciones() throws Exception {
-        ArrayList<FuncionVos> remL = darFunciones();
-        try
-        {
-            ArrayList<FuncionVos> resp = dtm.getRemoteVideos();
-            System.out.println(resp.getVideos().size());
-            remL.getVideos().addAll(resp.getVideos());
-        }
-        catch(NonReplyException e)
-        {
-
-        }
-        return remL;
-    }
-
     public FuncionVos getFuncionLocal(Long id) throws SQLException {
         FuncionVos elem;
         FuncionDao dao = new FuncionDao();
