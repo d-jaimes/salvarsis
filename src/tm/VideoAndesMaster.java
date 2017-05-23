@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import dao.DAOTablaVideos;
-import dtm.VideoAndesDistributed;
-import jms.NonReplyException;
 import vos.Video;
 import vos.ListaVideos;
 
