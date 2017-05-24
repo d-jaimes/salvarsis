@@ -91,7 +91,7 @@ public class CompaniasTeatroServices extends Services
         CompaniasTeatroCM cm = new CompaniasTeatroCM( getPath( ) );
         try
         {
-            cm.deleteCompaniasTeatroLocal(id, tipoId);
+            cm.deleteCompaniasTeatro(id, tipoId);
             return Response.status( 200 ).build( );
         }
         catch( Exception e )
@@ -119,7 +119,7 @@ public class CompaniasTeatroServices extends Services
             {
                 cm2.cancelarFuncionLocal(idFuncion);
             }
-            cm.deleteCompaniasTeatroLocal(id, tipoId);
+            cm.deleteCompaniasTeatro(id, tipoId);
             return Response.status( 200 ).build( );
         }
         catch( Exception e )

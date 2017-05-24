@@ -2,6 +2,7 @@ package tm;
 
 import dao.CompaniasTeatroDao;
 import dao.UsuarioDao;
+import protocolos.ProtocoloCompania;
 import vos.CompaniasTeatroVos;
 
 import java.sql.SQLException;
@@ -135,14 +136,23 @@ public class CompaniasTeatroCM extends TransactionManager
         }
     }
 
-    public void deleteCompaniasTeatroLocal(Long idusu, String tipoId) throws Exception
+    public ProtocoloCompania deleteCompaniasTeatro(Long idusu, String tipoId) throws Exception
     {
         CompaniasTeatroDao dao = new CompaniasTeatroDao();
+        ProtocoloCompania prot= new ProtocoloCompania();
+        ProtocoloCompania protocoloCompania = new ProtocoloCompania( );
+        UsuarioDao daoUsuario = new UsuarioDao( );
+
+        protocoloCompania.setResponse( 0 );
         try
         {
             this.connection = getConnection();
+            this.connection.setAutoCommit( false );
             dao.setConnection(connection);
+            daoUsuario.setConnection( connection );
             dao.deleteCompaniaTeatro(idusu, tipoId);
+            daoUsuario.deleteUsuario(idusu,tipoId);
+            prot.setResponse( 1 );
             connection.commit();
         }
         catch(SQLException e)
@@ -160,8 +170,10 @@ public class CompaniasTeatroCM extends TransactionManager
         }
         finally
         {
+            closeDAO( daoUsuario );
             closeDAO(dao);
         }
+        return prot;
     }
 
     //todo: req 16
