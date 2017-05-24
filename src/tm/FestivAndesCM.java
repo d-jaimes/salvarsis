@@ -1,6 +1,7 @@
 package tm;
 
 import dao.FestivAndesDao;
+import protocolos.ProtocoloFestival;
 import vos.FestivandesVos;
 
 import java.sql.SQLException;
@@ -170,5 +171,58 @@ public class FestivAndesCM extends TransactionManager
         {
             closeDAO(dao);
         }
+    }
+
+    @SuppressWarnings( "unchecked" )
+    public List<ProtocoloFestival> getFestivalesRemote( ) throws Exception
+    {
+        List<ProtocoloFestival> list = new LinkedList<>( );
+        try
+        {
+            list = festivalesToProtocol( getFestivals( ) );
+            this.connection = getConnection( );
+            this.connection.setAutoCommit( false );
+
+            FestivalJMS jms = FestivalJMS.getInstance( this );
+            jms.setUpJMSManager( NUMBER_APPS, QUEUE_FESTIVAL, FestivalJMS.TOPIC_ALL_FESTIVALES_GLOBAL );
+            list.addAll( jms.getResponse( ) );
+
+            connection.commit( );
+        }
+        catch( NonReplyException e )
+        {
+            throw new IncompleteReplyException( "No Reply from apps", list );
+        }
+        catch( IncompleteReplyException e )
+        {
+            List<ProtocoloFestival> partialResponse = ( List<ProtocoloFestival> ) e.getPartialResponse( );
+            list.addAll( partialResponse );
+            throw new IncompleteReplyException( "Incomplete Reply:", partialResponse );
+        }
+        catch( SQLException e )
+        {
+            System.err.println( "SQLException: " + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        catch( Exception e )
+        {
+            System.err.println( "GeneralException: " + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        finally
+        {
+            if( connection != null )
+            {
+                connection.close( );
+            }
+        }
+        return list;
+    }
+
+    public static List<ProtocoloFestival> festivalesToProtocol(ArrayList<FestivandesVos> festivalesLocal) {
     }
 }
