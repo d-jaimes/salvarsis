@@ -1,7 +1,7 @@
 package jms;
 
 import protocolos.ProtocoloFestival;
-import tm.FestivalCM;
+import tm.FestivAndesCM;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -21,7 +21,7 @@ public class FestivalJMS extends JMSManager<ProtocoloFestival>
 	 * Referencia a la clase principal FuncionCM (Connection Manager) para su uso.
 	 * Se usa para responder a requerimientos que llegan de otras aplicaciones
 	 */
-	private FestivalCM master;
+	private FestivAndesCM master;
 	
 	/**
 	 * Método que retorna la instancia única de la clase
@@ -29,7 +29,7 @@ public class FestivalJMS extends JMSManager<ProtocoloFestival>
 	 * @param transactionManager - instancia que hace referencia a la clase principal del TransactionManager
 	 * @return FuncionJMS - instancia única de la clase
 	 */
-	public static FestivalJMS getInstance( FestivalCM transactionManager )
+	public static FestivalJMS getInstance( FestivAndesCM transactionManager )
 	{
 		instancia = instancia == null ? new FestivalJMS( ) : instancia;
 		instancia.master = transactionManager;
@@ -62,7 +62,7 @@ public class FestivalJMS extends JMSManager<ProtocoloFestival>
 			}
 			else if( response.getQueue( ) != null )
 			{
-				String protocol = ALL_FESTIVALES_RESPONSE + CONNECTOR + listToProtocol( FestivalCM.festivalesToProtocol( master.getFestivals( ) ) );
+				String protocol = ALL_FESTIVALES_RESPONSE + CONNECTOR + listToProtocol( FestivAndesCM.festivalesToProtocol( master.getFestivalesLocal() ) );
 				enqueueResponse( response.getQueue( ), protocol );
 			}
 		}
