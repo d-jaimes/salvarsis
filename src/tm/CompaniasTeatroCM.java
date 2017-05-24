@@ -2,11 +2,20 @@ package tm;
 
 import dao.CompaniasTeatroDao;
 import dao.UsuarioDao;
+import jms.CompaniasTeatroJMS;
+import jms.IncompleteReplyException;
+import jms.JMSConstantes;
+import jms.NonReplyException;
 import protocolos.ProtocoloCompania;
 import vos.CompaniasTeatroVos;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import static tm.TMConstantes.NUMBER_APPS;
+import static tm.TMConstantes.QUEUE_COMPANIA;
 
 /**
  *
@@ -210,7 +219,53 @@ public class CompaniasTeatroCM extends TransactionManager
         return funcionesAsociadas;
     }
 
+    @SuppressWarnings( "unchecked" )
+    public List<ProtocoloCompania> deleteCompaniaDeTeatroRemote( Long id, String tipo ) throws Exception, IncompleteReplyException {
+        List<ProtocoloCompania> list = new LinkedList<>( );
+        try
+        {
+            list.add( deleteCompaniasTeatro(id,tipo) );
 
-
+            CompaniasTeatroJMS jms = new CompaniasTeatroJMS( );
+            jms.setUpJMSManager( NUMBER_APPS, QUEUE_COMPANIA, JMSConstantes.TOPIC_COMPANIA_GLOBAL );
+            jms.setIdCompania( id );
+            jms.setTipoIdCompania( tipo );
+            list.addAll( jms.getResponse( ) );
+        }
+        catch( NonReplyException e )
+        {
+            throw new IncompleteReplyException( "No Reply from apps", list );
+        }
+        catch( IncompleteReplyException e )
+        {
+            List<ProtocoloCompania> partialResponse = ( List<ProtocoloCompania> ) e.getPartialResponse( );
+            list.addAll( partialResponse );
+            throw new IncompleteReplyException( "Incomplete Reply:", partialResponse );
+        }
+        catch( SQLException e )
+        {
+            System.err.println( "SQLException:" + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        catch( Exception e )
+        {
+            System.err.println( "GeneralException:" + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        finally
+        {
+            if( connection != null )
+            {
+                connection.close( );
+            }
+        }
+        return list;
+    }
 
 }
+
+

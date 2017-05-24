@@ -8,6 +8,7 @@ import tm.CompaniasTeatroCM;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.naming.NamingException;
+import java.util.Arrays;
 
 /**
  * /**
@@ -17,7 +18,9 @@ public class CompaniasTeatroJMS extends JMSManager<ProtocoloCompania>
 {
 private static CompaniasTeatroJMS instancia;
 private CompaniasTeatroCM master;
+    private Long idCompania;
 
+    private String tipoIdCompania;
 public static CompaniasTeatroJMS getInstance(CompaniasTeatroCM transactionManager)
         {
         instancia=instancia==null?new CompaniasTeatroJMS():instancia;
@@ -68,4 +71,19 @@ public void onMessage(Message message){
         e.printStackTrace();
         }
         }
-        }
+    public void setIdCompania( Long idCompania )
+    {
+        this.idCompania = idCompania;
+    }
+
+    public void setTipoIdCompania( String tipoIdCompania )
+    {
+        this.tipoIdCompania = tipoIdCompania;
+    }
+
+    private Long protocolParamToId( String param )
+    {
+        return Arrays.stream( param.split( Protocolo.SEPARADOR_PARAMS ) ).map( Long::parseLong ).toArray( Long[]::new )[ 0 ];
+    }
+}
+
