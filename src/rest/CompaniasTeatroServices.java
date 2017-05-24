@@ -1,5 +1,7 @@
 package rest;
 
+import jms.IncompleteReplyException;
+import protocolos.ProtocoloCompania;
 import tm.CompaniasTeatroCM;
 import tm.FuncionesCM;
 import vos.CompaniasTeatroVos;
@@ -8,6 +10,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -126,5 +129,20 @@ public class CompaniasTeatroServices extends Services
         {
             return Response.status( 500 ).entity( doErrorMessage( e ) ).build( );
         }
+    }
+    @DELETE
+    @Path( "/remote/{id}" )
+    public Response deleteCompaniaDeTeatroRemote( @PathParam( "id" ) Long id, @HeaderParam("tipo") String tipo ) throws IncompleteReplyException {
+        List<ProtocoloCompania> list;
+        CompaniasTeatroCM tm = new CompaniasTeatroCM( getPath( ) );
+        try
+        {
+            list = tm.deleteCompaniaDeTeatroRemote( id,tipo );
+        }
+        catch( Exception e )
+        {
+            return Response.status( 500 ).entity( doErrorMessage( e ) ).build( );
+        }
+        return Response.status( 200 ).entity( list ).build( );
     }
 }
