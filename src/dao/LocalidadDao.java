@@ -84,4 +84,7 @@ public class LocalidadDao extends DAO {
         return obj;
 
     }
+//TODO
+    public LocalidadDao searchLocalidad(String nombreLocalidad) {
+    }
 }

@@ -1,5 +1,6 @@
 package dao;
 
+import protocolos.ProtocoloFestival;
 import vos.FestivandesVos;
 
 import java.sql.PreparedStatement;
@@ -83,5 +84,25 @@ public class FestivAndesDao extends DAO {
         obj.setFechaend(rs.getDate("FECHAEND"));
         obj.setLugar(rs.getString("LUGAR"));
         return obj;
+    }
+
+    public ProtocoloFestival searchFestival(String nombreFestival) throws SQLException {
+        FestivandesVos festival = null;
+
+        StringBuilder sql = new StringBuilder( );
+        sql.append( "SELECT * " );
+        sql.append( "  FROM FESTIVANDES " );
+        sql.append( String.format( "WHERE NOMBRE = '%s' ", nombreFestival ) );
+
+        PreparedStatement s = conn.prepareStatement( sql.toString( ) );
+        ResultSet rs = s.executeQuery( );
+        if( rs.next( ) )
+        {
+            festival = resultToFestival( rs );
+        }
+
+        rs.close( );
+        s.close( );
+        return festival;
     }
 }
