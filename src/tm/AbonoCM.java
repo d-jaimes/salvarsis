@@ -196,10 +196,11 @@ public class AbonoCM extends TransactionManager
         {
             FuncionCostoLocalidadVos funcionCosto = new FuncionCostoLocalidadVos( );
 
-                funcionCosto.setCosto();
+
+                funcionCosto.setCosto(funcionCosto.getCosto());
                 funcionCosto.setIdLugar(funcion.search(funcion.getNombreEspectaculo(), funcionCosto.getIdLugar()));
                 funcionCosto.setIdLocalidad(localidad.searchLocalidad(funcion.getNombreLocalidad())).getId());
-                funcionCosto.setIdFuncion(funcion.search());
+                funcionCosto.setIdFuncion(funcion.);
             list.add( funcionCosto );
         }
 //        cl.setIdLocalidad( daoLocalidad.searchLocalidad( funcion.getNombreLocalidad( ) ).getId( ) );
