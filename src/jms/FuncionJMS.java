@@ -45,7 +45,7 @@ public class FuncionJMS extends JMSManager<ProtocoloFuncion>
             }
             else if( response.getQueue( ) != null )
             {
-                String protocol = ALL_FUNCIONES_RESPONSE + CONNECTOR + listToProtocol( FuncionesCM.ProtocoloFuncion( master.getFuncionesLocal( ) ) );
+                String protocol = ALL_FUNCIONES_RESPONSE + CONNECTOR + listToProtocol(  master.getFuncionesLocal( ) );
                 enqueueResponse( response.getQueue( ), protocol );
             }
         }

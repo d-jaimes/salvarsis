@@ -1,12 +1,16 @@
 package tm;
 
 import dao.FuncionDao;
+import protocolos.ProtocoloFuncion;
 import vos.FuncionVos;
 import vos.UsuarioVos;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import static utils.DateUtils.timeToString;
 
 /**
  *
@@ -18,14 +22,14 @@ public class FuncionesCM extends TransactionManager
         super(contextPathP);
     }
 
-    public ArrayList<FuncionVos> getFuncionesLocal() throws SQLException {
-        ArrayList<FuncionVos> list = new ArrayList<FuncionVos>();
+    public List<ProtocoloFuncion> getFuncionesLocal() throws SQLException {
+        List<ProtocoloFuncion> list = new ArrayList<>();
         FuncionDao dao = new FuncionDao();
         try
         {
             this.connection = getConnection();
             dao.setConnection(connection);
-            list = dao.getFunciones();
+            list= toProtocol(dao.getFunciones());
             this.connection.commit();
         }
         catch(SQLException e)
@@ -269,5 +273,16 @@ public class FuncionesCM extends TransactionManager
         }
 
         return list;
+    }
+
+    private List<ProtocoloFuncion> toProtocol( List<FuncionVos> list)
+    {
+        List<ProtocoloFuncion> lista = new ArrayList<>();
+        for (FuncionVos funcion : list)
+        {
+            // TODO
+            ProtocoloFuncion f = new ProtocoloFuncion("app3", funcion.getIdFuncion(), timeToString( funcion.getFecha()),funcion.getIdLugar(),funcion.getIdShow(),funcion.isDone()==1);
+        }
+        return lista;
     }
 }
