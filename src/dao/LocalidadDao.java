@@ -85,20 +85,19 @@ public class LocalidadDao extends DAO {
 
     }
 //TODO
-    public LocalidadDao searchLocalidad(String nombreLocalidad)
-    {
-        LocalidadDao localidad = null;
+    public LocalidadVos searchLocalidad(String nombreLocalidad) throws SQLException {
+        LocalidadVos localidad = null;
 
         StringBuilder sql = new StringBuilder( );
         sql.append( "SELECT * " );
-        sql.append( "  FROM LOCALIDADES " );
-        sql.append( String.format( "WHERE NOMBRE = '%s' ", name ) );
+        sql.append( "  FROM " + TABLA );
+        sql.append( String.format( "WHERE TIPO = '%s' ", nombreLocalidad ) );
 
         PreparedStatement s = conn.prepareStatement( sql.toString( ) );
         ResultSet rs = s.executeQuery( );
         if( rs.next( ) )
         {
-            localidad = resultToBasicLocalidad( rs );
+            localidad = resultToLocalidad( rs );
         }
         rs.close( );
         s.close( );

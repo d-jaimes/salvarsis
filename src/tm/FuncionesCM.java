@@ -1,12 +1,17 @@
 package tm;
 
 import dao.FuncionDao;
+import protocolos.ProtocoloFuncion;
 import vos.FuncionVos;
 import vos.UsuarioVos;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import static utils.DateUtils.timeToString;
 
 /**
  *
@@ -49,17 +54,33 @@ public class FuncionesCM extends TransactionManager
         return list;
     }
 
-    public ArrayList<FuncionVos> darFunciones() throws Exception {
-        ArrayList<FuncionVos> remL = darFunciones();
+    public List<FuncionVos> getFuncionesRemote(Long idEspectaculo) throws Exception {
+        List<FuncionVos> remL;
+        FuncionDao dao = new FuncionDao();
         try
         {
-            ArrayList<FuncionVos> resp = dtm.getRemoteVideos();
-            System.out.println(resp.getVideos().size());
-            remL.getVideos().addAll(resp.getVideos());
+            this.connection = getConnection();
+            this.connection.setAutoCommit(false);
+            dao.setConnection(this.connection);
+            remL = dao.getFuncionesRemote(idEspectaculo);
         }
-        catch(NonReplyException e)
+        catch( SQLException e )
         {
-
+            System.err.println( "SQLException: " + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        catch( Exception e )
+        {
+            System.err.println( "GeneralException: " + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        finally
+        {
+            closeDAO( dao );
         }
         return remL;
     }
@@ -284,5 +305,37 @@ public class FuncionesCM extends TransactionManager
         }
 
         return list;
+    }
+
+    public static List<ProtocoloFuncion> funcionesToProtocol(List<FuncionVos> list )
+    {
+        List<ProtocoloFuncion> resultList = new LinkedList<>( );
+        for( FuncionVos funcion : list )
+        {
+            resultList.add( funcionToProtocol( funcion ) );
+        }
+        return resultList;
+    }
+
+    public static FuncionVos protocolToFuncion( ProtocoloFuncion protocoloFuncion )
+    {
+        FuncionVos funcion = new FuncionVos( );
+        funcion.setIdLugar( protocoloFuncion.getIdLugar( ) );
+        funcion.setIdShow( protocoloFuncion.getIdEspectaculo( ) );
+        funcion.setFecha( parseDateTime( protocoloFuncion.getFecha( ) ) );
+        funcion.setDone( protocoloFuncion.isRealizado( ) ? 1 : 0 );
+        return funcion;
+    }
+
+    public static ProtocoloFuncion funcionToProtocol( FuncionVos funcion )
+    {
+        ProtocoloFuncion protocoloFuncion = new ProtocoloFuncion( );
+        protocoloFuncion.setAppName( APP );
+        protocoloFuncion.setFecha( timeToString( funcion.getFecha( ) ) );
+        protocoloFuncion.setIdEspectaculo( funcion.getIdShow() );
+        protocoloFuncion.setIdFuncion( -1 );
+        protocoloFuncion.setIdLugar( funcion.getIdLugar( ) );
+        protocoloFuncion.setRealizado( funcion.isDone( ) == 1 );
+        return protocoloFuncion;
     }
 }

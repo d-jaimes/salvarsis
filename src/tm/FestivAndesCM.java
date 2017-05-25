@@ -1,6 +1,12 @@
 package tm;
 
 import dao.FestivAndesDao;
+import jms.FestivAndesJMS;
+import jms.FestivalJMS;
+import jms.IncompleteReplyException;
+import jms.NonReplyException;
+import oracle.sql.NUMBER;
+import oracle.sql.SQLUtil;
 import protocolos.ProtocoloFestival;
 import vos.FestivandesVos;
 
@@ -82,6 +88,52 @@ public class FestivAndesCM extends TransactionManager
         }
 
         return elem;
+    }
+
+    public List<ProtocoloFestival> getFestivalRemote() throws Exception{
+        List<ProtocoloFestival> list = new LinkedList<>();
+        try
+        {
+            this.connection = getConnection();
+            this.connection.setAutoCommit(false);
+
+            FestivAndesJMS jms = FestivAndesJMS.getInstance(this);
+            jms.setUpJMSManager(NUMBER_APPS, QUEUE_FESTIVAL, QUEUE_FESTIVAL_RESPONSE, FestivAndesJMS.TOPIC_ALL_FESTIVALES_GLOBAL);
+            list.addAll(jms.getResponse());
+            connection.commit();
+        }
+        catch( NonReplyException e )
+        {
+            throw new IncompleteReplyException( "No Reply from apps", list );
+        }
+        catch( IncompleteReplyException e )
+        {
+            List<ProtocoloFestival> partialResponse = ( List<ProtocoloFestival> ) e.getPartialResponse( );
+            list.addAll( partialResponse );
+            throw new IncompleteReplyException( "Incomplete Reply:", partialResponse );
+        }
+        catch( SQLException e )
+        {
+            System.err.println( "SQLException: " + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        catch( Exception e )
+        {
+            System.err.println( "GeneralException: " + e.getMessage( ) );
+            connection.rollback( );
+            e.printStackTrace( );
+            throw e;
+        }
+        finally
+        {
+            if( connection != null )
+            {
+                connection.close( );
+            }
+        }
+        return list;
     }
 
     public void createFestivalLocal(FestivandesVos obj) throws Exception
@@ -179,11 +231,11 @@ public class FestivAndesCM extends TransactionManager
         List<ProtocoloFestival> list = new LinkedList<>( );
         try
         {
-            list = festivalesToProtocol( getFestivals( ) );
+            list = festivalesToProtocol( getFestivalesLocal() );
             this.connection = getConnection( );
             this.connection.setAutoCommit( false );
 
-            FestivalJMS jms = FestivalJMS.getInstance( this );
+            FestivAndesJMS jms = FestivAndesJMS.getInstance( this );
             jms.setUpJMSManager( NUMBER_APPS, QUEUE_FESTIVAL, FestivalJMS.TOPIC_ALL_FESTIVALES_GLOBAL );
             list.addAll( jms.getResponse( ) );
 
@@ -223,6 +275,13 @@ public class FestivAndesCM extends TransactionManager
         return list;
     }
 
-    public static List<ProtocoloFestival> festivalesToProtocol(ArrayList<FestivandesVos> festivalesLocal) {
+    public static List<ProtocoloFestival> festivalesToProtocol(ArrayList<FestivandesVos> festivalesList)
+    {
+        List<ProtocoloFestival> resultList = new LinkedList<>();
+        for (FestivandesVos festival : festivalesList)
+        {
+            resultList.add(new ProtocoloFestival(APP, festival.getIdfest(), festival.getLugar(), SQLUtil.DateUtils.timeToString(festival.getFechaend())));
+        }
+        return resultList;
     }
 }
