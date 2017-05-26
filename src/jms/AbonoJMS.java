@@ -43,7 +43,8 @@ public class AbonoJMS extends JMSManager<ProtocoloAbono>
             }
             else if (response.getQueue()!= null)
             {
-                String protocol = CREAR_ABONOS_RESPONSE + CONNECTOR + master.createAbonoLocal(protocolToObject(response.getParams(), ProtocoloAbono.class), 0L , "");
+                ProtocoloAbono protocoloAbono = protocolToObject(response.getParams(), ProtocoloAbono.class);
+                String protocol = CREAR_ABONOS_RESPONSE + CONNECTOR + master.createAbonoLocal(null, 0L , "");
                 enqueueResponse(response.getQueue(), protocol);
             }
 

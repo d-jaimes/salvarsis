@@ -2,8 +2,8 @@ package tm;
 
 import dao.*;
 import protocolos.ProtocoloAbono;
+import utils.SQLUtils;
 import vos.*;
-import utils.*;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -11,38 +11,28 @@ import java.util.*;
 /**
  * Created by María del Rosario on 12/04/2017.
  */
-public class AbonoCM extends TransactionManager
-{
-    public AbonoCM(String contextPathP)
-    {
+public class AbonoCM extends TransactionManager {
+    public AbonoCM(String contextPathP) {
         super(contextPathP);
     }
 
     public ArrayList<AbonoVos> getAbonosLocal() throws SQLException {
         ArrayList<AbonoVos> list = new ArrayList<AbonoVos>();
         AbonoDao dao = new AbonoDao();
-        try
-        {
+        try {
             this.connection = getConnection();
             dao.setConnection(connection);
             list = dao.getAbonos();
             this.connection.commit();
-        }
-        catch(SQLException e)
-        {
+        } catch (SQLException e) {
             System.err.println("SQLException:" + e.getMessage());
             e.printStackTrace();
             throw e;
-        }
-
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println("GeneralException:" + e.getMessage());
             e.printStackTrace();
             throw e;
-        }
-        finally
-        {
+        } finally {
             closeDAO(dao);
         }
 
@@ -52,54 +42,43 @@ public class AbonoCM extends TransactionManager
     public AbonoVos getAbonoLocal(Long idusu, String tipoId) throws SQLException {
         AbonoVos elem;
         AbonoDao dao = new AbonoDao();
-        try
-        {
+        try {
             this.connection = getConnection();
-            dao.setConnection( connection);
+            dao.setConnection(connection);
             elem = dao.getAbono(idusu, tipoId);
-            this.connection.commit();;
+            this.connection.commit();
+            ;
 
-        }
-        catch(SQLException e)
-        {
+        } catch (SQLException e) {
             System.err.println("SQLException:" + e.getMessage());
             e.printStackTrace();
             throw e;
-        }
-
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println("GeneralException:" + e.getMessage());
             e.printStackTrace();
             throw e;
-        }
-        finally
-        {
+        } finally {
             closeDAO(dao);
         }
 
         return elem;
     }
 
-    public void createAbonoLocal(AbonoVos obj, Long id, String tipo) throws Exception
-    {
+    public AbonoVos createAbonoLocal(AbonoVos obj, Long id, String tipo) throws Exception {
         AbonoDao dao = new AbonoDao();
         FuncionCostoLocalidadDao fun = new FuncionCostoLocalidadDao();
         ReservaDao res = new ReservaDao();
         AbonoFuncionDao ab = new AbonoFuncionDao();
 
-        try
-        {
+        try {
             this.connection = getConnection();
             dao.setConnection(connection);
             fun.setConnection(connection);
             res.setConnection(connection);
             ab.setConnection(connection);
-            for (FuncionCostoLocalidadVos funcion : obj.getFunciones())
-            {
+            for (FuncionCostoLocalidadVos funcion : obj.getFunciones()) {
                 FuncionCostoLocalidadVos func = fun.getFuncionCostoLocalidad(funcion.getIdFuncion(), funcion.getIdLocalidad());
-                if (!res.reservaMultiple(id, tipo, func.getIdLocalidad(), func.getIdFuncion()).isEmpty())
-                {
+                if (!res.reservaMultiple(id, tipo, func.getIdLocalidad(), func.getIdFuncion()).isEmpty()) {
                     AbonoFuncionVos abfu = new AbonoFuncionVos();
                     abfu.setIdFest(obj.getIdFest());
                     abfu.setIdusu(obj.getIdusu());
@@ -109,32 +88,25 @@ public class AbonoCM extends TransactionManager
                     ab.addAbonoFuncion(abfu);
                 }
             }
-            dao.addAbono(obj,id, tipo);
+            dao.addAbono(obj, id, tipo);
             this.connection.commit();
-        }
-        catch(SQLException e)
-        {
+        } catch (SQLException e) {
             System.err.println("SQLException:" + e.getMessage());
             e.printStackTrace();
             this.connection.rollback();
             throw e;
-        }
-
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println("GeneralException:" + e.getMessage());
             e.printStackTrace();
             this.connection.rollback();
             throw e;
-        }
-        finally
-        {
+        } finally {
             closeDAO(dao);
         }
+        return obj;
     }
 
-    private void createAbono(ProtocoloAbono abono) throws Exception
-    {
+    private void createAbono(ProtocoloAbono abono) throws Exception {
         ProtocoloAbono retAbono = null;
 
         FestivAndesDao daoFestival = new FestivAndesDao();
@@ -143,45 +115,37 @@ public class AbonoCM extends TransactionManager
         FuncionCostoLocalidadDao funcostloc = new FuncionCostoLocalidadDao();
         ShowsDao show = new ShowsDao();
 
-        try
-        {
-           try
-           {
-               this.connection = getConnection();
-               daoFestival.setConnection(this.connection);
-               daoFuncion.setConnection(this.connection);
-               localidad.setConnection(this.connection);
-               funcostloc.setConnection(this.connection);
+        try {
+            try {
+                this.connection = getConnection();
+                daoFestival.setConnection(this.connection);
+                daoFuncion.setConnection(this.connection);
+                localidad.setConnection(this.connection);
+                funcostloc.setConnection(this.connection);
 
-               retAbono = abonoToProtocol(createAbonoLocal(protocolToAbono(abono, daoFestival, localidad, daoFuncion, funcostloc),daoFestival, localidad, daoFuncion, funcostloc ));
+                AbonoVos abonoVos = protocolToAbono(abono, daoFestival, localidad, daoFuncion, funcostloc);
+                retAbono = abonoToProtocol(createAbonoLocal(abonoVos, abono.getIdUsuario(), abono.getTipoId()), daoFestival, daoFuncion, show, localidad);
 
-           }
-           catch(SQLException e)
-           {
-               System.out.println("La aplicacion no pudo crear el abono");
-               System.err.println("SQLException:" + e.getMessage());
-               e.printStackTrace();
-               this.connection.rollback();
-               throw e;
-           }
-        }
-
-        catch (Exception e)
-        {
+            } catch (SQLException e) {
+                System.out.println("La aplicacion no pudo crear el abono");
+                System.err.println("SQLException:" + e.getMessage());
+                e.printStackTrace();
+                this.connection.rollback();
+                throw e;
+            }
+        } catch (Exception e) {
             System.err.println("GeneralException:" + e.getMessage());
             e.printStackTrace();
             this.connection.rollback();
             throw e;
-        }
-        finally
-        {
-            closeDAO(dao);
+        } finally {
+            closeDAO(daoFestival);
+            closeDAO(daoFuncion);
         }
     }
 
-    public List<ProtocoloAbono> createAbonoRemote(ProtocoloAbono abono) throws Exception
-    {
-        List <ProtocoloAbono> list = new LinkedList<>( );
+    public List<ProtocoloAbono> createAbonoRemote(ProtocoloAbono abono) throws Exception {
+        List<ProtocoloAbono> list = new LinkedList<>();
 
         FestivAndesDao festivalDao = new FestivAndesDao();
         FuncionDao funcionDao = new FuncionDao();
@@ -189,10 +153,8 @@ public class AbonoCM extends TransactionManager
         FuncionCostoLocalidadDao funcosloc = new FuncionCostoLocalidadDao();
         ShowsDao showDao = new ShowsDao();
 
-        try
-        {
-            try
-            {
+        try {
+            try {
                 this.connection = getConnection();
                 festivalDao.setConnection(this.connection);
                 funcionDao.setConnection(this.connection);
@@ -200,9 +162,14 @@ public class AbonoCM extends TransactionManager
                 funcosloc.setConnection(this.connection);
                 showDao.setConnection(this.connection);
 
-                list.add(c);
+//                list.add(c);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return list;
     }
 
     private AbonoVos protocolToAbono(ProtocoloAbono abono, FestivAndesDao daoFestival, LocalidadDao localidad, FuncionDao daoFuncion, FuncionCostoLocalidadDao funcostloc) throws SQLException {
@@ -211,53 +178,50 @@ public class AbonoCM extends TransactionManager
         abonoV.setIdusu(abono.getIdUsuario());
         abonoV.setDescuento(Float.parseFloat(String.valueOf(abono.getDescuento())));
         abonoV.setFunciones(protocoloFuncionesToCostoLocalidad(abono.getFunciones(), localidad, daoFuncion, funcostloc));
-        abonoV.setIdFest(daoFestival.searchFestival(abono.getNombreFestival()).getId());
+        abonoV.setIdFest(daoFestival.searchFestival(abono.getNombreFestival()).getIdfest());
         return abonoV;
     }
 
     private ArrayList<FuncionCostoLocalidadVos> protocoloFuncionesToCostoLocalidad(List<ProtocoloAbono.FuncionAbono> funciones, LocalidadDao localidad, FuncionDao daoFuncion, FuncionCostoLocalidadDao funcostloc) throws SQLException {
         ArrayList<FuncionCostoLocalidadVos> list = new ArrayList<>();
-        for( ProtocoloAbono.FuncionAbono funcion : funciones )
-        {
-            FuncionCostoLocalidadVos funcionCosto = new FuncionCostoLocalidadVos( );
+        for (ProtocoloAbono.FuncionAbono funcion : funciones) {
+            FuncionCostoLocalidadVos funcionCosto = new FuncionCostoLocalidadVos();
 
-                funcionCosto.setCosto(funcionCosto.getCosto());
-                funcionCosto.setIdLugar(funcion.search(funcion.getNombreEspectaculo(), funcionCosto.getIdLugar()));
-                funcionCosto.setIdLocalidad(localidad.searchLocalidad(funcion.getNombreLocalidad()).getIdLocalidad());
-                funcionCosto.setIdFuncion(SQLUtils.DateUtils.parseDateTime( funcion.getFecha( ) ));
-            list.add( funcionCosto );
+            funcionCosto.setCosto(funcionCosto.getCosto());
+//                funcionCosto.setIdLugar(funcion.search(funcion.getNombreEspectaculo(), funcionCosto.getIdLugar()));
+            funcionCosto.setIdLugar(1L);
+            funcionCosto.setIdLocalidad(localidad.searchLocalidad(funcion.getNombreLocalidad()).getIdLocalidad());
+            funcionCosto.setIdFuncion(-1L);
+            list.add(funcionCosto);
         }
 
 
         return list;
     }
 
+    public ProtocoloAbono abonoToProtocol(AbonoVos abono, FestivAndesDao daoFestival, FuncionDao daoFuncion, ShowsDao daoEspectaculo, LocalidadDao daoLocalidad) throws SQLException {
+//        ProtocoloAbono prot = null;
+//        FestivandesVos festival = daoFestival.getFestival(abono.getIdFest());
 
-    public ProtocoloAbono abonoToProtocol (AbonoVos abono, FestivAndesDao daoFestival, FuncionDao daoFuncion, ShowsDao daoEspectaculo, LocalidadDao daoLocalidad ) throws SQLException
-    {
-        ProtocoloAbono prot = null;
-        FestivandesVos festival = daoFestival.getFestival(abono.getIdFest());
-
-        if(festival != null)
-        {
-            prot = new ProtocoloAbono();
-            prot.setNombreFestival("festival app3: " + festival.getIdfest());
-            prot.setFunciones();
-        }
-//
-//         ProtocoloAbono prot = null;
-//        Festival festival = daoFestival.getFestival( abono.getIdFestival( ) );
-//        if( festival != null )
+//        if(festival != null)
 //        {
-//            prot = new ProtocoloAbono( );
-//            prot.setNombreFestival( festival.getNombre( ) );
-//            prot.setDescuento( abono.getDescuento( ) );
-//            prot.setIdUsuario( abono.getIdUsuario( ) );
-//            prot.setTipoId( abono.getTipoId( ) );
-//            prot.setFunciones( funcionAbonoToProtocol( abono.getFunciones( ), daoFuncion, daoEspectaculo, daoLocalidad ) );
-//            prot.setAppName( APP );
+//            prot = new ProtocoloAbono();
+//            prot.setNombreFestival("festival app3: " + festival.getIdfest());
+//            prot.setFunciones();
 //        }
-//        return prot;
+//
+        ProtocoloAbono prot = null;
+        FestivandesVos fes = daoFestival.getFestival(abono.getIdFest());
+        if (fes != null) {
+            prot = new ProtocoloAbono();
+            prot.setNombreFestival("Festival Tortuguita");
+            prot.setDescuento(abono.getDescuento());
+            prot.setIdUsuario(abono.getIdusu());
+            prot.setTipoId(abono.getTipoId());
+//            prot.setFunciones( funcionAbonoToProtocol( abono.getFunciones(), daoFuncion, daoEspectaculo, daoLocalidad));
+            prot.setAppName("App3");
+        }
+        return prot;
     }
 
     public void updateAbonoLocal(AbonoVos obj) throws Exception {
@@ -281,38 +245,28 @@ public class AbonoCM extends TransactionManager
         }
     }
 
-    public void deleteAbonoLocal(Long idusu, String tipoId) throws Exception
-    {
+    public void deleteAbonoLocal(Long idusu, String tipoId) throws Exception {
         AbonoDao dao = new AbonoDao();
         AbonoFuncionDao dao2 = new AbonoFuncionDao();
-        try
-        {
+        try {
             this.connection = getConnection();
             dao.setConnection(connection);
             dao2.setConnection(connection);
-            for (FuncionCostoLocalidadVos func : dao.getAbono(idusu, tipoId).getFunciones() )
-            {
-                dao2.deleteAbonoFuncion(dao.getAbono(idusu, tipoId).getIdFest(), idusu, tipoId,func.getIdFuncion(), func.getIdLocalidad() );
+            for (FuncionCostoLocalidadVos func : dao.getAbono(idusu, tipoId).getFunciones()) {
+                dao2.deleteAbonoFuncion(dao.getAbono(idusu, tipoId).getIdFest(), idusu, tipoId, func.getIdFuncion(), func.getIdLocalidad());
             }
             dao.deleteAbono(idusu, tipoId);
 
             connection.commit();
-        }
-        catch(SQLException e)
-        {
+        } catch (SQLException e) {
             System.err.println("SQLException:" + e.getMessage());
             e.printStackTrace();
             throw e;
-        }
-
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println("GeneralException:" + e.getMessage());
             e.printStackTrace();
             throw e;
-        }
-        finally
-        {
+        } finally {
             closeDAO(dao);
         }
     }
@@ -333,11 +287,9 @@ public class AbonoCM extends TransactionManager
             cal.setTime(f.getFechast());
             cal.add(Calendar.WEEK_OF_YEAR, -3);
 
-            if (new Date().compareTo(cal.getTime()) <= 0)
-            {
-                for (FuncionCostoLocalidadVos func : dao.getAbono(idusu, tipoId).getFunciones() )
-                {
-                    dao2.deleteAbonoFuncion(dao.getAbono(idusu, tipoId).getIdFest(), idusu, tipoId,func.getIdFuncion(), func.getIdLocalidad() );
+            if (new Date().compareTo(cal.getTime()) <= 0) {
+                for (FuncionCostoLocalidadVos func : dao.getAbono(idusu, tipoId).getFunciones()) {
+                    dao2.deleteAbonoFuncion(dao.getAbono(idusu, tipoId).getIdFest(), idusu, tipoId, func.getIdFuncion(), func.getIdLocalidad());
                 }
                 dao.deleteAbono(idusu, tipoId);
                 deleteAbonoLocal(idusu, tipoId);
@@ -357,6 +309,6 @@ public class AbonoCM extends TransactionManager
         } finally {
             closeDAO(dao);
         }
-        return "Pagar al Senor(a): " + "el total del abono numero: " ;
+        return "Pagar al Senor(a): " + "el total del abono numero: ";
     }
 }

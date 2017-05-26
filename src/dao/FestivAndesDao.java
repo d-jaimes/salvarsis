@@ -86,7 +86,7 @@ public class FestivAndesDao extends DAO {
         return obj;
     }
 
-    public ProtocoloFestival searchFestival(String nombreFestival) throws SQLException {
+    public FestivandesVos searchFestival(String nombreFestival) throws SQLException {
         FestivandesVos festival = null;
 
         StringBuilder sql = new StringBuilder( );

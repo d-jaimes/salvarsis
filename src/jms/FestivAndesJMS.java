@@ -18,7 +18,7 @@ public class FestivAndesJMS extends JMSManager<ProtocoloFestival>
 
     private FestivAndesCM master;
 
-    public FestivAndesJMS getInstance(FestivAndesCM transactionManager)
+    public static FestivAndesJMS getInstance(FestivAndesCM transactionManager)
     {
         instancia = instancia == null ? new FestivAndesJMS() : instancia;
         instancia.master = transactionManager;
